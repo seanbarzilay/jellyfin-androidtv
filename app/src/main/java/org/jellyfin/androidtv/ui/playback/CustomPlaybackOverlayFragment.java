@@ -77,6 +77,7 @@ import org.jellyfin.sdk.model.api.BaseItemDto;
 import org.jellyfin.sdk.model.api.BaseItemKind;
 import org.jellyfin.sdk.model.api.ChapterInfo;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -1236,13 +1237,21 @@ public class CustomPlaybackOverlayFragment extends Fragment implements LiveTvGui
             // set other information
             tvGuideBinding.guideCurrentTitle.setText(current.getName());
 
+
+            // Get release date
+//            SimpleDateFormat dateFormat = new SimpleDateFormat("LLL d, y.");
+//            String premDateString = dateFormat.format(current.getPremiereDate());
+            String premieredDate = TimeUtils.getFriendlyDate(getContext(), current.getPremiereDate());
             // Update the title and subtitle
             if (current.getType() == BaseItemKind.EPISODE) {
                 binding.itemTitle.setText(current.getSeriesName());
                 binding.itemSubtitle.setText(BaseItemExtensionsKt.getDisplayName(current, requireContext()));
+                binding.itemPremiereDate.setText(premieredDate);
             } else {
                 binding.itemTitle.setText(current.getName());
+                binding.itemSubtitle.setText(premieredDate);
             }
+
             // Update the logo
             String imageUrl = imageHelper.getValue().getLogoImageUrl(current, 440, false);
             if (imageUrl != null) {

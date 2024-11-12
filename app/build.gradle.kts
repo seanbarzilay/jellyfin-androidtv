@@ -1,3 +1,6 @@
+import org.gradle.api.JavaVersion.VERSION_11
+import org.gradle.api.JavaVersion.VERSION_1_8
+
 plugins {
 	id("com.android.application")
 	kotlin("android")
@@ -8,9 +11,9 @@ plugins {
 
 android {
 	namespace = "org.jellyfin.androidtv"
-	compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdkVersion(libs.versions.android.compileSdk.get().toInt())
 
-	defaultConfig {
+    defaultConfig {
 		minSdk = libs.versions.android.minSdk.get().toInt()
 		targetSdk = libs.versions.android.targetSdk.get().toInt()
 
@@ -29,7 +32,9 @@ android {
 
 	compileOptions {
 		isCoreLibraryDesugaringEnabled = true
-	}
+        sourceCompatibility = VERSION_1_8
+        targetCompatibility = VERSION_1_8
+    }
 
 	buildTypes {
 		val release by getting {
