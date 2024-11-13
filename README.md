@@ -87,3 +87,4 @@ Look through the following graphic to see if your native language could use some
    ```
 
 *You can also replace the "Debug" with "Release" to get an optimized release binary.*
+.
