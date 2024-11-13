@@ -1,12 +1,15 @@
 package org.jellyfin.androidtv.ui.playback.overlay
 
 import android.content.Context
-import androidx.core.graphics.drawable.toBitmap
 import androidx.leanback.widget.PlaybackSeekDataProvider
-import coil.ImageLoader
-import coil.request.Disposable
-import coil.request.ImageRequest
-import coil.size.Size
+import coil3.ImageLoader
+import coil3.network.NetworkHeaders
+import coil3.network.httpHeaders
+import coil3.request.Disposable
+import coil3.request.ImageRequest
+import coil3.request.transformations
+import coil3.size.Size
+import coil3.toBitmap
 import org.jellyfin.androidtv.util.coil.SubsetTransformation
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.trickplayApi
@@ -21,19 +24,16 @@ class CustomSeekProvider(
 	private val api: ApiClient,
 	private val context: Context,
 	private val trickPlayEnabled: Boolean,
+	private val forwardTime: Long
 ) : PlaybackSeekDataProvider() {
-	companion object {
-		private const val SEEK_LENGTH = 10000L
-	}
-
 	private val imageRequests = mutableMapOf<Int, Disposable>()
 
 	override fun getSeekPositions(): LongArray {
 		if (!videoPlayerAdapter.canSeek()) return LongArray(0)
 
 		val duration = videoPlayerAdapter.duration
-		val size = ceil(duration.toDouble() / SEEK_LENGTH.toDouble()).toInt() + 1
-		return LongArray(size) { i -> min(i * SEEK_LENGTH, duration) }
+		val size = ceil(duration.toDouble() / forwardTime.toDouble()).toInt() + 1
+		return LongArray(size) { i -> min(i * forwardTime, duration) }
 	}
 
 	override fun getThumbnail(index: Int, callback: ResultCallback) {
@@ -51,7 +51,7 @@ class CustomSeekProvider(
 		val trickPlayInfo = trickPlayResolutions?.values?.firstOrNull()
 		if (trickPlayInfo == null) return
 
-		val currentTimeMs = (index * SEEK_LENGTH).coerceIn(0, videoPlayerAdapter.duration)
+		val currentTimeMs = (index * forwardTime).coerceIn(0, videoPlayerAdapter.duration)
 		val currentTile = currentTimeMs.floorDiv(trickPlayInfo.interval).toInt()
 
 		val tileSize = trickPlayInfo.tileWidth * trickPlayInfo.tileHeight
@@ -73,22 +73,24 @@ class CustomSeekProvider(
 		imageRequests[index] = imageLoader.enqueue(ImageRequest.Builder(context).apply {
 			data(url)
 			size(Size.ORIGINAL)
-			addHeader(
-				"Authorization",
-				AuthorizationHeaderBuilder.buildHeader(
-					api.clientInfo.name,
-					api.clientInfo.version,
-					api.deviceInfo.id,
-					api.deviceInfo.name,
-					api.accessToken
+			httpHeaders(NetworkHeaders.Builder().apply {
+				set(
+					key = "Authorization",
+					value = AuthorizationHeaderBuilder.buildHeader(
+						api.clientInfo.name,
+						api.clientInfo.version,
+						api.deviceInfo.id,
+						api.deviceInfo.name,
+						api.accessToken
+					)
 				)
-			)
+			}.build())
 
 			transformations(SubsetTransformation(offsetX, offsetY, trickPlayInfo.width, trickPlayInfo.height))
 
 			target(
-				onSuccess = { result ->
-					val bitmap = result.current.toBitmap()
+				onSuccess = { image ->
+					val bitmap = image.toBitmap()
 					callback.onThumbnailLoaded(bitmap, index)
 				}
 			)
