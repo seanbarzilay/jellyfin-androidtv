@@ -169,7 +169,3 @@ dependencies {
 	testImplementation(libs.kotest.assertions)
 	testImplementation(libs.mockk)
 }
-
-jar{
-   destinationDir = file("/output")
-}
