@@ -40,9 +40,9 @@
     <string name="lbl_none">Cap</string>
     <string name="lbl_recordings">Gravacions</string>
     <string name="lbl_videos">Vídeos</string>
-    <string name="lbl_people">Gent</string>
+    <string name="lbl_people">Persones</string>
     <string name="lbl_other_options">Altres opcions</string>
-    <string name="lbl_last_played">"Última reproducció "</string>
+    <string name="lbl_last_played">"Últimes reproduccions "</string>
     <string name="lbl_directed_by">Dirigit per</string>
     <string name="lbl_ends">Finalitza</string>
     <string name="lbl_runs">Reproduccions</string>
@@ -567,4 +567,13 @@
     <string name="segment_type_recap">Recapitulacions</string>
     <string name="segment_type_unknown">Segments desconeguts</string>
     <string name="segment_action_nothing">No facis res</string>
+    <string name="video_start_delay">Retard de l\'inici del vídeo</string>
+    <string name="runtime_hours_minutes">%1$dh %2$dm</string>
+    <string name="runtime_minutes">%1$dm</string>
+    <string name="segment_action_ask_to_skip">Demanar per saltar</string>
+    <string name="segment_type_commercial">Publicitat</string>
+    <string name="segment_type_outro">Crèdits</string>
+    <string name="preference_enable_trickplay">Habilitar previsualitzacions al reproductor</string>
+    <string name="skip_forward_length">Longitud de salt cap endavant</string>
+    <string name="pref_mediasegment_actions">Accions de segment de mitjans</string>
 </resources>
