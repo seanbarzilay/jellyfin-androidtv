@@ -1238,8 +1238,9 @@ public class CustomPlaybackOverlayFragment extends Fragment implements LiveTvGui
             // Get release date
 //            SimpleDateFormat dateFormat = new SimpleDateFormat("LLL d, y.");
 //            String premDateString = dateFormat.format(current.getPremiereDate());
+            
             String premieredDate = //TimeUtils.getFriendlyDate(getContext(), current.getPremiereDate());
-            DateTimeFormatter.ISO_DATE.format(current.getPremiereDate());
+            current.getPremiereDate() != null ? DateTimeFormatter.ISO_DATE.format(current.getPremiereDate()) : "No date";
             // Update the title and subtitle
             if (current.getType() == BaseItemKind.EPISODE) {
                 binding.itemTitle.setText(current.getSeriesName());
