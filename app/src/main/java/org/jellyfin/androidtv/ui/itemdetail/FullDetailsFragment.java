@@ -49,6 +49,7 @@ import org.jellyfin.androidtv.data.service.BackgroundService;
 import org.jellyfin.androidtv.databinding.FragmentFullDetailsBinding;
 import org.jellyfin.androidtv.preference.UserPreferences;
 import org.jellyfin.androidtv.preference.constant.ClockBehavior;
+import org.jellyfin.androidtv.ui.InteractionTrackerViewModel;
 import org.jellyfin.androidtv.ui.RecordPopup;
 import org.jellyfin.androidtv.ui.RecordingIndicatorView;
 import org.jellyfin.androidtv.ui.TextUnderButton;
@@ -150,6 +151,7 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
     private final Lazy<KeyProcessor> keyProcessor = inject(KeyProcessor.class);
     final Lazy<PlaybackHelper> playbackHelper = inject(PlaybackHelper.class);
     private final Lazy<ImageHelper> imageHelper = inject(ImageHelper.class);
+    private final Lazy<InteractionTrackerViewModel> interactionTracker = inject(InteractionTrackerViewModel.class);
 
     @Nullable
     @Override
@@ -769,14 +771,14 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
         mResumeButton = TextUnderButton.create(requireContext(), R.drawable.ic_resume, buttonSize, 2, buttonLabel, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FullDetailsFragmentHelperKt.resumePlayback(FullDetailsFragment.this);
+                FullDetailsFragmentHelperKt.resumePlayback(FullDetailsFragment.this, v);
             }
         });
 
         if (BaseItemExtensionsKt.canPlay(baseItem)) {
             mDetailsOverviewRow.addAction(mResumeButton);
-            boolean resumeButtonVisible = (baseItem.getType() == BaseItemKind.SERIES && !mBaseItem.getUserData().getPlayed()) || (JavaCompat.getCanResume(mBaseItem));
-            mResumeButton.setVisibility(resumeButtonVisible ? View.VISIBLE : View.GONE);
+            boolean isSeries = baseItem.getType() == BaseItemKind.SERIES;
+            boolean isStarted = baseItem.getUserData().getPlayedPercentage() != null && baseItem.getUserData().getPlayedPercentage() > 0;
 
             playButton = TextUnderButton.create(requireContext(), R.drawable.ic_play, buttonSize, 2, getString(BaseItemExtensionsKt.isLiveTv(mBaseItem) ? R.string.lbl_tune_to_channel : Utils.getSafeValue(mBaseItem.isFolder(), false) ? R.string.lbl_play_all : R.string.lbl_play), new View.OnClickListener() {
                 @Override
@@ -784,13 +786,15 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
                     play(mBaseItem, 0, false);
                 }
             });
-
             mDetailsOverviewRow.addAction(playButton);
 
-            if (resumeButtonVisible) {
-                mResumeButton.requestFocus();
+            if (isSeries && !isStarted) {
+                FullDetailsFragmentHelperKt.getNextUpEpisode(this, nextUpEpisode -> {
+                    handleResumeButtonAndFocus(nextUpEpisode);
+                    return null;
+                });
             } else {
-                playButton.requestFocus();
+                handleResumeButtonAndFocus(null);
             }
 
             boolean isMusic = baseItem.getType() == BaseItemKind.MUSIC_ALBUM
@@ -1063,6 +1067,24 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
             showMoreButtonIfNeeded();  //Episodes check for previous and then call this above
     }
 
+    private void handleResumeButtonAndFocus(BaseItemDto nextUpEpisode) {
+        boolean isSeries = mBaseItem.getType() == BaseItemKind.SERIES;
+        boolean isFinished = mBaseItem.getUserData().getPlayed();
+        boolean isStarted = mBaseItem.getUserData().getPlayedPercentage() != null && mBaseItem.getUserData().getPlayedPercentage() > 0;
+        if (!isStarted && nextUpEpisode != null) {
+            isStarted = nextUpEpisode.getUserData().getPlaybackPositionTicks() > 0;
+        }
+
+        boolean resumeButtonVisible = (isSeries && isStarted && !isFinished) || (JavaCompat.getCanResume(mBaseItem));
+        mResumeButton.setVisibility(resumeButtonVisible ? View.VISIBLE : View.GONE);
+
+        if (resumeButtonVisible) {
+            mResumeButton.requestFocus();
+        } else {
+            playButton.requestFocus();
+        }
+    }
+
     private void addVersionsMenu(View v) {
         PopupMenu menu = new PopupMenu(requireContext(), v, Gravity.END);
 
@@ -1199,6 +1221,7 @@ public class FullDetailsFragment extends Fragment implements RecordingIndicatorV
                     return;
                 }
 
+                interactionTracker.getValue().notifyStartSession(item, response);
                 KoinJavaComponent.<PlaybackLauncher>get(PlaybackLauncher.class).launch(getContext(), response, pos, false, 0, shuffle);
             }
         });

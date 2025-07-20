@@ -8,6 +8,7 @@ import org.jellyfin.androidtv.preference.UserSettingPreferences
 import org.jellyfin.androidtv.preference.constant.AudioBehavior
 import org.jellyfin.androidtv.preference.constant.NEXTUP_TIMER_DISABLED
 import org.jellyfin.androidtv.preference.constant.NextUpBehavior
+import org.jellyfin.androidtv.preference.constant.StillWatchingBehavior
 import org.jellyfin.androidtv.ui.playback.segment.MediaSegmentAction
 import org.jellyfin.androidtv.ui.playback.segment.MediaSegmentRepository
 import org.jellyfin.androidtv.ui.preference.custom.DurationSeekBarPreference
@@ -61,6 +62,12 @@ class PlaybackPreferencesScreen : OptionsFragment() {
 					userPreferences[UserPreferences.mediaQueuingEnabled]
 						&& userPreferences[UserPreferences.nextUpBehavior] != NextUpBehavior.DISABLED
 				}
+			}
+
+			enum<StillWatchingBehavior> {
+				setTitle(R.string.pref_still_watching_behavior_title)
+				bind(userPreferences, UserPreferences.stillWatchingBehavior)
+				depends { userPreferences[UserPreferences.mediaQueuingEnabled] }
 			}
 
 			checkbox {
@@ -218,6 +225,17 @@ class PlaybackPreferencesScreen : OptionsFragment() {
 					get { (userPreferences[UserPreferences.subtitlesTextSize] * 100f).roundToInt() }
 					set { value -> userPreferences[UserPreferences.subtitlesTextSize] = value / 100f }
 					default { (UserPreferences.subtitlesTextSize.defaultValue * 100f).roundToInt() }
+				}
+			}
+
+			checkbox {
+				setTitle(R.string.pref_subtitles_bold)
+				bind {
+					val boldWeight = 700
+					val normalWeight = UserPreferences.subtitlesTextWeight.defaultValue
+					get { userPreferences[UserPreferences.subtitlesTextWeight] == boldWeight }
+					set { checked -> userPreferences[UserPreferences.subtitlesTextWeight] = if (checked) boldWeight else normalWeight }
+					default { false }
 				}
 			}
 		}
